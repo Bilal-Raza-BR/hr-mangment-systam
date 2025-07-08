@@ -13,13 +13,20 @@ router.post("/login/:slug", loginUserBySlug);
 
 const {
     createCompany,
-    createCompanyAdmin
+    createCompanyAdmin,
+    getPublicCompanyBySlug,
+    searchCompanies 
 } = require("../controllers/companyController");
 const upload = require("../middlewares/upload");
 
 router.post("/register/company", upload.single("logo"), createCompany);
 
 router.post("/register/company-admin", createCompanyAdmin);
+
+router.get('/public/:slug', getPublicCompanyBySlug);
+
+router.get('/search', searchCompanies);
+
 
 // ==== 4. OWNER DASHBOARD ====
 const {

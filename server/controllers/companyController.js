@@ -11,6 +11,7 @@ const createCompany = async (req, res) => {
       website,
       phone,
       address
+    
     } = req.body;
 
 
@@ -118,9 +119,37 @@ const createCompanyAdmin = async (req, res) => {
   }
 };
 
-// module.exports = {
-//   createCompanyAdmin
-// };
+// GET /api/company/public/:slug
+const getPublicCompanyBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const company = await Company.findOne({ slug }).select('name logoUrl industry isApproved isActive');
+
+    if (!company) {
+      return res.status(404).json({ message: 'Company not found' });
+    }
+
+    if (!company.isApproved || !company.isActive) {
+      return res.status(403).json({ message: 'Company is not active' });
+    }
+
+    res.status(200).json(company);
+  } catch (error) {
+    console.error("Error fetching company:", error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+const searchCompanies = async (req, res) => {
+  const { query } = req.query;
+  if (!query) return res.status(400).json({ message: 'Query is required' });
+
+  const companies = await Company.find({
+    companyName: { $regex: query, $options: 'i' }
+  }).select('companyName slug');
+
+  res.json(companies);
+};
 
 
-module.exports = { createCompany ,createCompanyAdmin };
+module.exports = { createCompany ,createCompanyAdmin ,getPublicCompanyBySlug,searchCompanies};

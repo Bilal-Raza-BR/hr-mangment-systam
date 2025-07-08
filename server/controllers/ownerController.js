@@ -164,7 +164,7 @@ const registerOwner = async (req, res) => {
   }
 };
 
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 
 const loginOwner = async (req, res) => {
   try {
@@ -250,6 +250,26 @@ const toggleCompanyStatus = async (req, res) => {
 
 // module.exports.toggleCompanyStatus = toggleCompanyStatus;
 
+// GET total companies, blocked companies, and total employees
+// const Company = require("../modals/companyModel");
+// const User = require("../modals/userModel");
+
+const getCompanyStats = async (req, res) => {
+  try {
+    const totalCompanies = await Company.countDocuments();
+    const blockedCompanies = await Company.countDocuments({ isBlocked: true });
+    const totalEmployees = await Company.users.countDocuments({ role: "employee" });
+
+    res.status(200).json({
+      totalCompanies,
+      blockedCompanies,
+      totalEmployees
+    });
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    res.status(500).json({ message: "Failed to get stats" });
+  }
+};
 
 
 module.exports = {
@@ -258,5 +278,6 @@ module.exports = {
   sendInvite, // 👈 isko export karna mat bhool
   // registerOwner
   loginOwner,
-   toggleCompanyStatus
+   toggleCompanyStatus,
+   getCompanyStats
 };
