@@ -270,6 +270,31 @@ const getCompanyStats = async (req, res) => {
     res.status(500).json({ message: "Failed to get stats" });
   }
 };
+//***************************************** */
+
+
+const getOwnerProfile = async (req, res) => {
+  try {
+    const ownerId = req.user?.ownerId;
+
+    if (!ownerId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const owner = await Owner.findById(ownerId).select("-password");
+
+    if (!owner) {
+      return res.status(404).json({ message: "Owner not found" });
+    }
+
+    res.status(200).json({ owner });
+  } catch (error) {
+    console.error("Error fetching owner profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+//**************************************** */
 
 
 module.exports = {
@@ -279,5 +304,7 @@ module.exports = {
   // registerOwner
   loginOwner,
    toggleCompanyStatus,
-   getCompanyStats
+   getCompanyStats,
+   getOwnerProfile
+
 };

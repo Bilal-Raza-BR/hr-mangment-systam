@@ -1,100 +1,85 @@
-// Final OwnerDashboard Layout based on your confirmation
-
-import React from 'react';
-import { Box, Grid, Paper } from '@mui/material';
+// src/pages/OwnerDashboard.jsx
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import jwtDecode from 'jwt-decode';
+import { CircularProgress, Box } from '@mui/material';
 import OwnerSidebar from '../components/OwnerSidebar';
 import OwnerTopbar from '../components/OwnerTopbar';
-// import AllCompanyStatsCard from '../components/AllCompanyStatsCard';
-// import CompanyListTable from '../components/CompanyListTable';
-// import BlockedCompaniesList from '../components/BlockedCompaniesList';
-// import InviteCompanyForm from '../components/InviteCompanyForm';
-// import CompanyRequestTable from '../components/CompanyRequestTable';
-// import PendingRequestSection from '../components/PendingRequestSection';
+import AllCompanyStatsCard from '../components/AllCompanyStatsCard';
+import CompanyListTable from '../components/CompanyListTable';
+import InviteCompanyForm from '../components/InviteCompanyForm';
+import PendingRequestSection from '../components/PendingRequestSection';
+import BlockedCompaniesList from '../components/BlockedCompaniesList';
 
-const drawerWidth = 240;
+const OwnerDashboard = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [ownerData, setOwnerData] = useState(null);
+  const [stats, setStats] = useState(null);
 
-const OwnerDashboard = ({ toggleTheme, mode }) => {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const token = localStorage.getItem('ownerToken');
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  useEffect(() => {
+    if (!token) {
+      return navigate('/');
+    }
+
+    let decoded;
+    try {
+      decoded = jwtDecode(token);
+      if (decoded.role !== 'superadmin') {
+        return navigate('/');
+      }
+    } catch (error) {
+      return navigate('/');
+    }
+
+    // Fetch owner + stats
+    const fetchData = async () => {
+      try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const [ownerRes, statsRes] = await Promise.all([
+          fetch('http://localhost:5000/api/owner/profile', { headers }),
+          fetch('http://localhost:5000/api/admin/stats', { headers })
+        ]);
+
+        const ownerJson = await ownerRes.json();
+        const statsJson = await statsRes.json();
+
+        setOwnerData(ownerJson.owner);
+        setStats(statsJson);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        navigate('/');
+      }
+    };
+
+    fetchData();
+  }, [navigate, token]);
+
+  if (loading) {
+    return (
+      <Box minHeight="100vh" display="flex" justifyContent="center" alignItems="center">
+        <CircularProgress size={40} />
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      {/* Sidebar */}
-      <OwnerSidebar
-        mobileOpen={mobileOpen}
-        handleDrawerToggle={handleDrawerToggle}
-        toggleTheme={toggleTheme}
-        themeMode={mode}
-      />
+    <Box display="flex" minHeight="100vh">
+      <OwnerSidebar />
+      <Box flexGrow={1}>
+        <OwnerTopbar owner={ownerData} />
 
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          backgroundColor: 'background.default',
-          minHeight: '100vh',
-          // marginBottom:'100px'
-        }}
-      >
-        {/* Topbar */}
-        <OwnerTopbar onMenuClick={handleDrawerToggle} />
-
-        {/* Cards Section */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            {/* <AllCompanyStatsCard title="Total Companies" statKey="total" /> */}
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            {/* <AllCompanyStatsCard title="Active Companies" statKey="active" /> */}
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            {/* <AllCompanyStatsCard title="Blocked Companies" statKey="blocked" /> */}
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            {/* <AllCompanyStatsCard title="Pending Requests" statKey="pending" /> */}
-          </Grid>
-        </Grid>
-
-        {/* Invite Form + Requests Table */}
-        <Grid container spacing={2} mt={1}>
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 2 }}>
-              {/* <InviteCompanyForm /> */}
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 2 }}>
-              {/* <CompanyRequestTable /> */}
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Blocked List */}
-        <Grid container spacing={2} mt={1}>
-          <Grid item xs={12}>
-            <Paper elevation={3} sx={{ p: 2 }}>
-              {/* <BlockedCompaniesList /> */}
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* All Company Table */}
-        <Grid container spacing={2} mt={1}>
-          <Grid item xs={12}>
-            <Paper elevation={3} sx={{ p: 2 }}>
-              {/* <CompanyListTable /> */}
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Tabs and Graph Sections (Placeholder for now) */}
-        {/* Future implementation for Charts, Graphs and Tabs */}
+        <Box p={2}>
+          <AllCompanyStatsCard stats={stats} />
+          <InviteCompanyForm />
+          <PendingRequestSection />
+          <CompanyListTable />
+          <BlockedCompaniesList />
+        </Box>
       </Box>
     </Box>
   );

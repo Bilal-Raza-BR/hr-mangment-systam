@@ -35,7 +35,9 @@ const {
     sendInvite,
     // registerOwner
      loginOwner,
-     toggleCompanyStatus 
+     toggleCompanyStatus,
+     getOwnerProfile,
+     getCompanyStats 
 } = require("../controllers/ownerController");
 // const uploadpro = require("../middlewares/multer");
 const verifyOwner = require("../middlewares/verifyOwner");
@@ -45,6 +47,8 @@ router.patch("/admin/request/:id/handled", markRequestHandled);
 router.post("/admin/invite-company", sendInvite);
 router.post("/owner/login", loginOwner);
 router.patch("/owner/company/:slug/status", verifyOwner, toggleCompanyStatus);
+router.get("/owner/profile", verifyOwner, getOwnerProfile);
+router.get("/admin/stats", verifyOwner, getCompanyStats); // ✅ protected
 
 // router.post("/owner/register", upload.single("profilePic"), registerOwner); // Temporary, only for first setup
 // // ==== 5. USER MANAGEMENT ====
